@@ -1,18 +1,17 @@
 var Botkit = require('botkit');
-var controller = Botkit.botframeworkbot({
-});
+var controller = Botkit.botframeworkbot({});
 
 var bot = controller.spawn({
-        appId: process.env.app_id,
-        appPassword: process.env.app_password
+    appId: process.env.app_id,
+    appPassword: process.env.app_password
 });
 
 // if you are already using Express, you can use your own server instance...
 // see "Use BotKit with an Express web server"
-controller.setupWebserver(process.env.port,function(err,webserver) {
-  controller.createWebhookEndpoints(controller.webserver, bot, function() {
-      console.log('This bot is online!!!');
-  });
+controller.setupWebserver(process.env.PORT, function(err, webserver) {
+    controller.createWebhookEndpoints(controller.webserver, bot, function() {
+        console.log('This bot is online!!!');
+    });
 });
 
 // user said hello

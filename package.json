@@ -4,9 +4,13 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "botbuilder-location": "^1.1.0",
     "botkit": "^0.5.2"
   },
   "devDependencies": {},
+  "engines": {
+    "node": "8.1.4"
+  },
   "scripts": {
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"

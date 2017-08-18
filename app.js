@@ -109,17 +109,18 @@ controller.on('message_received', (bot, message) => {
   console.log(message)
   // check if brain connected
   if (brainConnected) {
+    // set the context to be able to send back to the user
     contexts.set(message.user, message)
-    // TODO preprocess message
+    // preprocess message
+    const position = message.entities && message.entities.find((el) => { if (el.geo) return true })
     const websocketMsg = {
       userId: message.user,
       text: message.text,
-      position: message.entities && message.entities.geo,
+      position: position && position.geo,
       attachments: message.attachments
     }
     // deliver the message to the brain
     websocket.send(JSON.stringify(websocketMsg))
-    bot.reply(message, 'sent to the brain')
   } else {
     // TODO store the message for future connection with brain?
     bot.reply(message, 'my brain is offline!')

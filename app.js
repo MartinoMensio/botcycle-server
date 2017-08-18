@@ -67,7 +67,8 @@ wss.on('connection', (ws, request) => {
               if (err) {
                 throw err
               }
-              convo.say(message.message)
+              // TODO platform-specific cards/attachments
+              convo.say(message.text)
               convo.next()
             })
           } else {
@@ -76,7 +77,9 @@ wss.on('connection', (ws, request) => {
           }
         }
       } catch (err) {
-        console.log(err)
+        if (!(err instanceof SyntaxError)) {
+          console.log(err)
+        }
       }
     })
 
@@ -106,9 +109,16 @@ controller.on('message_received', (bot, message) => {
   console.log(message)
   // check if brain connected
   if (brainConnected) {
-    // deliver the message to the brain
-    websocket.send(JSON.stringify(message))
+    contexts.set(message.user, message)
     // TODO preprocess message
+    const websocketMsg = {
+      userId: message.user,
+      text: message.text,
+      position: message.entities && message.entities.geo,
+      attachments: message.attachments
+    }
+    // deliver the message to the brain
+    websocket.send(JSON.stringify(websocketMsg))
     bot.reply(message, 'sent to the brain')
   } else {
     // TODO store the message for future connection with brain?

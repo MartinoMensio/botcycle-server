@@ -2,6 +2,7 @@ const express = require('express')
 const http = require('http')
 const url = require('url')
 const WebSocket = require('ws')
+const sendHeartbeats = require('ws-heartbeats')
 const path = require('path')
 const bodyParser = require('body-parser')
 const Botkit = require('botkit')
@@ -52,6 +53,9 @@ wss.on('connection', (ws, request) => {
 
     brainConnected = true
     websocket = ws
+
+    // enable heartbeats to keep the connection alive
+    sendHeartbeats(ws)
 
     ws.on('message', (messageStr) => {
       // message from brain received

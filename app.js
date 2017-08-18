@@ -24,18 +24,22 @@ const server = http.createServer(app)
 let brainConnected = false
 let websocket = null
 
+const contexts = new Map()
+
 // configuration of the websocket for communication with the brain
 const wss = new WebSocket.Server({ server })
 
 wss.on('connection', (ws, request) => {
-  // TODO check the path inside resource
   console.log('request received')
   const urlParsed = url.parse(request.url, true)
+  // check the connection request inside resource
   if (urlParsed.pathname !== '/brain') {
+    // path
     ws.close(3001, 'please connect on the path /brain')
     return
   }
   if (urlParsed.query['jwt'] !== authorizationHeader) {
+    // and authentication of brain
     ws.close(3002, 'authentication of brain failed')
     return
   }
@@ -44,16 +48,36 @@ wss.on('connection', (ws, request) => {
     ws.close(3003, 'a brain is already connected')
     console.log('the brain is already connected. Rejected connection request ' + request)
   } else {
-    // TODO check authentication of brain (some headers constant)
     console.log('accepting brain connection request' + request)
 
     brainConnected = true
     websocket = ws
 
-    ws.on('message', (message) => {
-      // TODO message from brain received
-      console.log('Received Message from brain: ' + message)
-      ws.send('ok received ' + message)
+    ws.on('message', (messageStr) => {
+      // message from brain received
+      console.log('Received Message from brain: ' + messageStr)
+      try {
+        const message = JSON.parse(messageStr)
+        if (message.userId) {
+          // this is a message to deliver
+          const context = contexts.get(message.userId)
+          if (context) {
+            // send via botkit
+            bot.startConversation(context, (err, convo) => {
+              if (err) {
+                throw err
+              }
+              convo.say(message.message)
+              convo.next()
+            })
+          } else {
+            // the context does not exist
+            throw new Error('no context for this chat. Maybe this user never sent a message to the bot?')
+          }
+        }
+      } catch (err) {
+        console.log(err)
+      }
     })
 
     ws.on('close', (message) => {
@@ -80,12 +104,11 @@ controller.createWebhookEndpoints(app, bot, function () {
 // message received from botframework
 controller.on('message_received', (bot, message) => {
   console.log(message)
-  // TODO preprocess message
-  // TODO check if brain connected
+  // check if brain connected
   if (brainConnected) {
     // deliver the message to the brain
     websocket.send(JSON.stringify(message))
-    // TODO
+    // TODO preprocess message
     bot.reply(message, 'sent to the brain')
   } else {
     // TODO store the message for future connection with brain?

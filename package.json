@@ -5,7 +5,8 @@
   "main": "app.js",
   "dependencies": {
     "botbuilder-location": "^1.1.0",
-    "botkit": "^0.5.2"
+    "botkit": "^0.5.2",
+    "ws": "^3.1.0"
   },
   "devDependencies": {},
   "engines": {

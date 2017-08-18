@@ -84,7 +84,7 @@ controller.on('message_received', (bot, message) => {
   // TODO check if brain connected
   if (brainConnected) {
     // deliver the message to the brain
-    websocket.send(message)
+    websocket.send(JSON.stringify(message))
     // TODO
     bot.reply(message, 'sent to the brain')
   } else {

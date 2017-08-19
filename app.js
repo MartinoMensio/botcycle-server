@@ -77,7 +77,8 @@ wss.on('connection', (ws, request) => {
                   break
                 case 'buttons':
                   // TODO platform-specific cards/attachments
-                  convo.say(message.text, {
+                  convo.say({
+                    text: message.text,
                     attachments: [
                       {
                         contentType: 'application/vnd.microsoft.card.hero',
@@ -101,7 +102,8 @@ wss.on('connection', (ws, request) => {
                   })
                   break
                 case 'map':
-                  convo.say(message.text, {
+                  convo.say({
+                    text: message.text,
                     attachments: [
                       {
                         contentType: 'image/png',

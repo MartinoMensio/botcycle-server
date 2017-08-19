@@ -80,12 +80,16 @@ wss.on('connection', (ws, request) => {
                   const preparedButtons = message.buttons.map(btnText => {
                     return { type: 'imBack', title: btnText, value: btnText }
                   })
+                  console.log(preparedButtons)
                   convo.say({
                     text: message.text,
                     attachments: [
                       {
-                        contentType: 'application/vnd.microsoft.card.adaptive',
+                        contentType: 'application/vnd.microsoft.card.hero',
                         content: {
+                          title: message.text,
+                          subtitle: 'Pig Latin Wikipedia Page',
+                          images: [],
                           buttons: preparedButtons
                         }
                       }

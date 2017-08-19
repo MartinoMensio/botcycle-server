@@ -77,31 +77,23 @@ wss.on('connection', (ws, request) => {
                   break
                 case 'buttons':
                   // TODO platform-specific cards/attachments
+                  const preparedButtons = message.buttons.map(btnText => {
+                    return { type: 'imBack', title: btnText, value: btnText }
+                  })
                   convo.say({
                     text: message.text,
                     attachments: [
                       {
-                        contentType: 'application/vnd.microsoft.card.hero',
+                        contentType: 'application/vnd.microsoft.card.adaptive',
                         content: {
-                          title: "I'm a hero card",
-                          subtitle: 'Pig Latin Wikipedia Page',
-                          images: [
-                            { url: 'https://<ImageUrl1>' },
-                            { url: 'https://<ImageUrl2>' }
-                          ],
-                          buttons: [
-                            {
-                              type: 'openUrl',
-                              title: 'WikiPedia Page',
-                              value: 'https://en.wikipedia.org/wiki/Pig_Latin'
-                            }
-                          ]
+                          buttons: preparedButtons
                         }
                       }
                     ]
                   })
                   break
                 case 'map':
+                // TODO send map
                   convo.say({
                     text: message.text,
                     attachments: [

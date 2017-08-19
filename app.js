@@ -71,8 +71,50 @@ wss.on('connection', (ws, request) => {
               if (err) {
                 throw err
               }
-              // TODO platform-specific cards/attachments
-              convo.say(message.text)
+              switch (message.type) {
+                case 'text':
+                  convo.say(message.text)
+                  break
+                case 'buttons':
+                  // TODO platform-specific cards/attachments
+                  convo.say(message.text, {
+                    attachments: [
+                      {
+                        contentType: 'application/vnd.microsoft.card.hero',
+                        content: {
+                          title: "I'm a hero card",
+                          subtitle: 'Pig Latin Wikipedia Page',
+                          images: [
+                            { url: 'https://<ImageUrl1>' },
+                            { url: 'https://<ImageUrl2>' }
+                          ],
+                          buttons: [
+                            {
+                              type: 'openUrl',
+                              title: 'WikiPedia Page',
+                              value: 'https://en.wikipedia.org/wiki/Pig_Latin'
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  })
+                  break
+                case 'map':
+                  convo.say(message.text, {
+                    attachments: [
+                      {
+                        contentType: 'image/png',
+                        contentUrl: 'https://upload.wikimedia.org/wikipedia/en/a/a6/Bender_Rodriguez.png',
+                        name: 'Bender_Rodriguez.png'
+                      }
+                    ]
+                  })
+                  break
+                default:
+                  break
+              }
+              // TODO
               convo.next()
             })
           } else {

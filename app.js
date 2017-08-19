@@ -83,21 +83,33 @@ wss.on('connection', (ws, request) => {
                   console.log(preparedButtons)
                   convo.say({
                     text: message.text,
-                    attachments: [
-                      {
-                        contentType: 'application/vnd.microsoft.card.hero',
-                        content: {
-                          title: message.text,
-                          subtitle: 'Pig Latin Wikipedia Page',
-                          images: [],
-                          buttons: preparedButtons
-                        }
-                      }
-                    ]
+                    suggestedActions: {
+                      actions: preparedButtons
+                    }
                   })
                   break
+                // request_location
+                case 'request_location':
+                  // TODO
+                  break
+                // map for the location
+                case 'location':
+                  if (message.userId.startsWith('telegram')) {
+                    const telegramChannelData = {
+                      method: 'sendLocation',
+                      parameters: {
+                        latitude: message.attachments[0].latitude,
+                        longitude: message.attachments[0].longitude
+                      }
+                    }
+                    convo.say({
+                      text: 'tell me your location',
+                      sourceEvent: telegramChannelData
+                    })
+                  }
+                  break
                 case 'map':
-                // TODO send map
+                  // TODO send map
                   convo.say({
                     text: message.text,
                     attachments: [

@@ -77,7 +77,7 @@ wss.on('connection', (ws, request) => {
                   break
                 case 'buttons':
                   // TODO platform-specific cards/attachments
-                  const preparedButtons = message.buttons.map(btnText => {
+                  const preparedButtons = message.attachments.map(btnText => {
                     return { type: 'imBack', title: btnText, value: btnText }
                   })
                   console.log(preparedButtons)
@@ -104,7 +104,7 @@ wss.on('connection', (ws, request) => {
                     }
                     convo.say({
                       text: 'tell me your location',
-                      sourceEvent: telegramChannelData
+                      channelData: telegramChannelData
                     })
                   }
                   break

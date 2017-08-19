@@ -82,10 +82,16 @@ wss.on('connection', (ws, request) => {
                   })
                   console.log(preparedButtons)
                   convo.say({
-                    text: message.text,
-                    suggestedActions: {
-                      actions: preparedButtons
-                    }
+                    attachments: [
+                      {
+                        contentType: 'application/vnd.microsoft.card.hero',
+                        content: {
+                          title: message.text,
+                          images: [],
+                          buttons: preparedButtons
+                        }
+                      }
+                    ]
                   })
                   break
                 // request_location
@@ -103,7 +109,6 @@ wss.on('connection', (ws, request) => {
                       }
                     }
                     convo.say({
-                      text: 'tell me your location',
                       channelData: telegramChannelData
                     })
                   }

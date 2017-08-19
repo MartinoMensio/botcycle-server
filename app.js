@@ -82,11 +82,13 @@ wss.on('connection', (ws, request) => {
                   })
                   console.log(preparedButtons)
                   convo.say({
+                    text: message.text,
                     attachments: [
                       {
                         contentType: 'application/vnd.microsoft.card.hero',
                         content: {
                           title: message.text,
+                          subtitle: 'use the buttons below',
                           images: [],
                           buttons: preparedButtons
                         }

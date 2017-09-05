@@ -113,7 +113,6 @@ wss.on('connection', (ws, request) => {
                       method: 'sendMessage',
                       parameters: {
                         text: 'send me your location',
-                        parse_mode: 'Markdown',
                         reply_markup: JSON.stringify({
                           one_time_keyboard: true,
                           keyboard: [[{
@@ -123,7 +122,9 @@ wss.on('connection', (ws, request) => {
                         })
                       }
                     }
+                    console.log(telegramChannelData)
                     convo.say({
+                      text: 'send your location',
                       channelData: telegramChannelData
                     })
                   } else {

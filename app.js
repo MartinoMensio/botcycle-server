@@ -111,7 +111,7 @@ wss.on('connection', (ws, request) => {
                   } else if (message.userId.startsWith('telegram')) {
                     const telegramChannelData = {
                       parse_mode: 'Markdown',
-                      replay_markup: JSON.stringify({
+                      reply_markup: JSON.stringify({
                         one_time_keyboard: true,
                         keyboard: [[{
                           text: 'send location',

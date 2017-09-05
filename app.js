@@ -80,7 +80,6 @@ wss.on('connection', (ws, request) => {
                   const preparedButtons = message.attachments.map(btn => {
                     return { type: 'imBack', title: btn.value, value: btn.value }
                   })
-                  console.log(preparedButtons)
                   convo.say({
                     text: message.text,
                     attachments: [
@@ -98,7 +97,35 @@ wss.on('connection', (ws, request) => {
                   break
                 // request_location
                 case 'request_location':
-                  // TODO
+                  // ask the user for their location, using native channel data
+                  if (message.userId.startsWith('facebook')) {
+                    const fbChannelData = {
+                      quick_replies: [{
+                        content_type: 'location'
+                      }]
+                    }
+                    convo.say({
+                      text: message.text,
+                      channelData: fbChannelData
+                    })
+                  } else if (message.userId.startsWith('telegram')) {
+                    const telegramChannelData = {
+                      parse_mode: 'Markdown',
+                      replay_markup: {
+                        one_time_keyboard: true,
+                        keyboard: [[{
+                          text: 'send location',
+                          request_location: true
+                        }]]
+                      }
+                    }
+                    convo.say({
+                      text: message.text,
+                      channelData: telegramChannelData
+                    })
+                  } else {
+                    convo.say(message.text)
+                  }
                   break
                 // map for the location
                 case 'location':
@@ -131,6 +158,11 @@ wss.on('connection', (ws, request) => {
                                 type: 'openUrl',
                                 value: 'https://www.google.com/maps/place/' + loc
                               }
+                            }],
+                            buttons: [{
+                              type: 'openUrl',
+                              title: 'open in map',
+                              value: 'https://www.google.com/maps/place/' + loc
                             }]
                           }
                         }

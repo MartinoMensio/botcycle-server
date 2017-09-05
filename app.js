@@ -112,22 +112,31 @@ wss.on('connection', (ws, request) => {
                     }
                     convo.say({
                       text: 'I got this position',
+                      // TODO how not to have this field?
                       channelData: telegramChannelData
                     })
+                  } else {
+                    const loc = message.attachments[0].latitude + ',' + message.attachments[0].longitude
+                    convo.say({
+                      text: message.text,
+                      attachments: [
+                        {
+                          contentType: 'application/vnd.microsoft.card.hero',
+                          content: {
+                            title: message.text,
+                            images: [{
+                              url: 'https://maps.googleapis.com/maps/api/staticmap?center=' + loc + '&zoom=13&size=400x400&markers=' + loc,
+                              alt: 'location',
+                              tap: {
+                                type: 'openUrl',
+                                value: 'https://www.google.com/maps/place/' + loc
+                              }
+                            }]
+                          }
+                        }
+                      ]
+                    })
                   }
-                  break
-                case 'map':
-                  // TODO send map
-                  convo.say({
-                    text: message.text,
-                    attachments: [
-                      {
-                        contentType: 'image/png',
-                        contentUrl: 'https://upload.wikimedia.org/wikipedia/en/a/a6/Bender_Rodriguez.png',
-                        name: 'Bender_Rodriguez.png'
-                      }
-                    ]
-                  })
                   break
                 default:
                   break

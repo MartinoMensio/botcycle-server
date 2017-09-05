@@ -110,17 +110,20 @@ wss.on('connection', (ws, request) => {
                     })
                   } else if (message.userId.startsWith('telegram')) {
                     const telegramChannelData = {
-                      parse_mode: 'Markdown',
-                      reply_markup: JSON.stringify({
-                        one_time_keyboard: true,
-                        keyboard: [[{
-                          text: 'send location',
-                          request_location: true
-                        }]]
-                      })
+                      method: 'sendMessage',
+                      parameters: {
+                        text: 'send me your location',
+                        parse_mode: 'Markdown',
+                        reply_markup: JSON.stringify({
+                          one_time_keyboard: true,
+                          keyboard: [[{
+                            text: 'send location',
+                            request_location: true
+                          }]]
+                        })
+                      }
                     }
                     convo.say({
-                      text: message.text,
                       channelData: telegramChannelData
                     })
                   } else {

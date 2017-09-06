@@ -6,10 +6,12 @@ const sendHeartbeats = require('ws-heartbeats')
 const path = require('path')
 const bodyParser = require('body-parser')
 const Botkit = require('botkit')
-// const locationDialog = require('botbuilder-location')
+
+// load the environment file if present
+require('dotenv').config()
 
 const port = process.env.PORT || 8888
-const authorizationHeader = process.env.BRAIN_JWT || 'pizza'
+const authorizationHeader = process.env.WEBSOCKET_TOKEN || 'pizza'
 
 // express configuration
 const app = express()

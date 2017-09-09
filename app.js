@@ -51,7 +51,7 @@ wss.on('connection', (ws, request) => {
     ws.close(3003, 'a brain is already connected')
     console.log('the brain is already connected. Rejected connection request ' + request)
   } else {
-    console.log('accepting brain connection request' + request)
+    console.log(new Date() + ' - accepted brain connection from ' + request.headers['user-agent'])
 
     brainConnected = true
     websocket = ws
@@ -77,26 +77,6 @@ wss.on('connection', (ws, request) => {
                 case 'text':
                   convo.say(message.text)
                   break
-                case 'buttons':
-                  // TODO platform-specific cards/attachments
-                  const preparedButtons = message.attachments.map(btn => {
-                    return { type: 'imBack', title: btn.value, value: btn.value }
-                  })
-                  convo.say({
-                    text: message.text,
-                    attachments: [
-                      {
-                        contentType: 'application/vnd.microsoft.card.hero',
-                        content: {
-                          title: message.text,
-                          subtitle: 'use the buttons below',
-                          images: [],
-                          buttons: preparedButtons
-                        }
-                      }
-                    ]
-                  })
-                  break
                 // request_location
                 case 'request_location':
                   // ask the user for their location, using native channel data
@@ -114,7 +94,7 @@ wss.on('connection', (ws, request) => {
                     const telegramChannelData = {
                       method: 'sendMessage',
                       parameters: {
-                        text: 'send me your location',
+                        text: message.text,
                         reply_markup: JSON.stringify({
                           one_time_keyboard: true,
                           keyboard: [[{
@@ -126,7 +106,8 @@ wss.on('connection', (ws, request) => {
                     }
                     console.log(telegramChannelData)
                     convo.say({
-                      text: 'send your location',
+                      // TODO check
+                      // text: 'send your location',
                       channelData: telegramChannelData
                     })
                   } else {
@@ -134,47 +115,53 @@ wss.on('connection', (ws, request) => {
                   }
                   break
                 // map for the location
-                case 'location':
-                  if (message.userId.startsWith('telegram')) {
-                    const telegramChannelData = {
-                      method: 'sendLocation',
-                      parameters: {
-                        latitude: message.attachments[0].latitude,
-                        longitude: message.attachments[0].longitude
-                      }
-                    }
-                    convo.say({
-                      text: 'I got this position',
-                      // TODO how not to have this field?
-                      channelData: telegramChannelData
-                    })
-                  } else {
-                    const loc = message.attachments[0].latitude + ',' + message.attachments[0].longitude
-                    convo.say({
-                      text: message.text,
-                      attachments: [
-                        {
-                          contentType: 'application/vnd.microsoft.card.hero',
-                          content: {
-                            title: message.text,
-                            images: [{
-                              url: 'https://maps.googleapis.com/maps/api/staticmap?center=' + loc + '&zoom=13&size=400x400&markers=' + loc + '&key=' + process.env.MAPS_TOKEN,
-                              alt: 'location',
-                              tap: {
-                                type: 'openUrl',
-                                value: 'https://www.google.com/maps/place/' + loc
-                              }
-                            }],
-                            buttons: [{
-                              type: 'openUrl',
-                              title: 'open in map',
-                              value: 'https://www.google.com/maps/place/' + loc
-                            }]
-                          }
+                case 'map':
+
+                  const loc = message.markers[0].latitude + ',' + message.markers[0].longitude
+                  const buttons = (message.buttons || []).map(el => {
+                    switch (el.type) {
+                      // a button that on click sends a message with the value
+                      case 'text':
+                        return {
+                          type: 'imBack',
+                          title: el.value,
+                          value: el.value
                         }
-                      ]
-                    })
-                  }
+                      // a button that on click opens a link in the browser
+                      case 'link':
+                        return {
+                          type: 'openUrl',
+                          title: el.title || el.value,
+                          value: el.value
+                        }
+                    }
+                  })
+                  buttons.unshift({
+                    type: 'openUrl',
+                    title: 'open in map',
+                    value: 'https://www.google.com/maps/place/' + loc
+                  })
+                  convo.say({
+                    // text: message.text,
+                    attachments: [
+                      {
+                        contentType: 'application/vnd.microsoft.card.hero',
+                        content: {
+                          // title: 'Results',
+                          text: message.text,
+                          images: [{
+                            url: 'https://maps.googleapis.com/maps/api/staticmap?center=' + loc + '&zoom=13&size=400x400&markers=' + loc + '&key=' + process.env.MAPS_TOKEN,
+                            alt: 'location',
+                            tap: {
+                              type: 'openUrl',
+                              value: 'https://www.google.com/maps/place/' + loc
+                            }
+                          }],
+                          buttons: buttons
+                        }
+                      }
+                    ]
+                  })
                   break
                 default:
                   break

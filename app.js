@@ -158,7 +158,7 @@ wss.on('connection', (ws, request) => {
                           content: {
                             title: message.text,
                             images: [{
-                              url: 'https://maps.googleapis.com/maps/api/staticmap?center=' + loc + '&zoom=13&size=400x400&markers=' + loc,
+                              url: 'https://maps.googleapis.com/maps/api/staticmap?center=' + loc + '&zoom=13&size=400x400&markers=' + loc + '&key=' + process.env.MAPS_TOKEN,
                               alt: 'location',
                               tap: {
                                 type: 'openUrl',

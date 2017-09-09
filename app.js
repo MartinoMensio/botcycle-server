@@ -94,7 +94,7 @@ wss.on('connection', (ws, request) => {
                     const telegramChannelData = {
                       method: 'sendMessage',
                       parameters: {
-                        text: message.text,
+                        // text parameter (compulsory) is specified below
                         reply_markup: JSON.stringify({
                           one_time_keyboard: true,
                           keyboard: [[{
@@ -106,8 +106,8 @@ wss.on('connection', (ws, request) => {
                     }
                     console.log(telegramChannelData)
                     convo.say({
-                      // TODO check
-                      // text: 'send your location',
+                      // this is a required field
+                      text: message.text,
                       channelData: telegramChannelData
                     })
                   } else {

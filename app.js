@@ -128,14 +128,17 @@ const onWebsocketMessage = (message) => {
           // display a button to the user asking facebook login
           case 'login':
             convo.say({
-              text: message.text,
-              suggestedActions: {
-                actions: [{
-                  type: 'openUrl',
-                  title: 'login',
-                  value: 'https://www.facebook.com/v2.10/dialog/oauth?client_id=1253230874729964&redirect_uri=https%3A//botcycle-botkit.herokuapp.com/fb_logged%3Fid%3D' + encryption.encrypt(message.userId) + '&scope=user_likes,user_location,user_tagged_places'
-                }]
-              }
+              attachments: [{
+                contentType: 'application/vnd.microsoft.card.signin',
+                content: {
+                  text: message.text,
+                  buttons: [{
+                    type: 'openUrl',
+                    title: 'login with facebook',
+                    value: 'https://www.facebook.com/v2.10/dialog/oauth?client_id=1253230874729964&redirect_uri=https%3A//botcycle-botkit.herokuapp.com/fb_logged%3Fid%3D' + encryption.encrypt(message.userId) + '&scope=user_likes,user_location,user_tagged_places'
+                  }]
+                }
+              }]
             })
             break
           default:

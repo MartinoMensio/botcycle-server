@@ -65,6 +65,7 @@ const send = (message) => {
     websocket.send(JSON.stringify(message))
     return true
   } else {
+    console.log('disconnected brain, impossible to send')
     return false
   }
 }

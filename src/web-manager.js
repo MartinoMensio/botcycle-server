@@ -31,7 +31,7 @@ const config = (app) => {
           websocket.send({ type: 'login', userId: chatId, token: token })
           getUser(token).then(result => {
             console.log(result)
-            return res.render('fb_logged', { name: result.first_name, pictureUrl: result.pictureUrl })
+            return res.render('fb_logged', { name: result.first_name, pictureUrl: result.picture.data.url })
           })
         }).catch(errorAsync => {
           console.log(errorAsync.message)
@@ -81,14 +81,7 @@ const getLongAccessToken = (code, chatIdEnc) => {
 }
 
 const getUser = (token) => {
-  const namePromise = request.get({ uri: paramValues.fb_graph_url + '/me', qs: { fields: 'first_name' }, headers: { Authorization: `Bearer ${token}` }, json: true })
-  const userPicturePromise = request.get({ uri: paramValues.fb_graph_url + '/me/picture', qs: { redirect: 0, height: 200 }, headers: { Authorization: `Bearer ${token}` }, json: true })
-  return Promise.all([namePromise, userPicturePromise]).then(results => {
-    return {
-      first_name: results[0].first_name,
-      pictureUrl: results[1].data.url
-    }
-  })
+  return request.get({ uri: paramValues.fb_graph_url + '/me', qs: { fields: 'first_name,picture.height(200)' }, headers: { Authorization: `Bearer ${token}` }, json: true })
 }
 
 module.exports = { config }

@@ -9,7 +9,7 @@ const paramValues = {
   client_id: process.env.FB_CLIENT_ID,
   redirect_uri: process.env.MYSELF + '/fb_logged',
   client_secret: process.env.FB_CLIENT_SECRET,
-  fb_graph_url: 'https://graph.facebook.com/v2.10/oauth/access_token'
+  fb_graph_url: 'https://graph.facebook.com/v2.10'
 }
 
 const config = (app) => {
@@ -29,8 +29,10 @@ const config = (app) => {
         const chatId = encryption.decrypt(chatIdEnc)
         getLongAccessToken(code, chatIdEnc).then(token => {
           websocket.send({ type: 'login', userId: chatId, token: token })
-          // TODO get user name in address.user.name
-          return res.render('fb_logged', { name: 'test' })
+          getUser(token).then(result => {
+            console.log(result)
+            return res.render('fb_logged', { name: result.first_name, pictureUrl: result.pictureUrl })
+          })
         }).catch(errorAsync => {
           console.log(errorAsync.message)
           return res.render('error')
@@ -65,16 +67,27 @@ const getLongAccessToken = (code, chatIdEnc) => {
     client_secret: paramValues.client_secret,
     code: code
   }
-  return request.get({ uri: paramValues.fb_graph_url, qs: params, json: true }).then(result => {
+  return request.get({ uri: paramValues.fb_graph_url + '/oauth/access_token', qs: params, json: true }).then(result => {
     const longTermParams = {
       grant_type: 'fb_exchange_token',
       client_id: paramValues.client_id,
       client_secret: paramValues.client_secret,
       fb_exchange_token: result.access_token
     }
-    return request.get({ uri: paramValues.fb_graph_url, qs: longTermParams, json: true })
+    return request.get({ uri: paramValues.fb_graph_url + '/oauth/access_token', qs: longTermParams, json: true })
   }).then(result => {
     return result.access_token
+  })
+}
+
+const getUser = (token) => {
+  const namePromise = request.get({ uri: paramValues.fb_graph_url + '/me', qs: { fields: 'first_name' }, headers: { Authorization: `Bearer ${token}` }, json: true })
+  const userPicturePromise = request.get({ uri: paramValues.fb_graph_url + '/me/picture', qs: { redirect: 0, height: 200 }, headers: { Authorization: `Bearer ${token}` }, json: true })
+  return Promise.all([namePromise, userPicturePromise]).then(results => {
+    return {
+      first_name: results[0].first_name,
+      pictureUrl: results[1].data.url
+    }
   })
 }
 

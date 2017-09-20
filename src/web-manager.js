@@ -28,8 +28,8 @@ const config = (app) => {
       try {
         const chatId = encryption.decrypt(chatIdEnc)
         getLongAccessToken(code, chatIdEnc).then(token => {
-          websocket.send({ type: 'login', userId: chatId, token: token })
           getUser(token).then(result => {
+            websocket.send({ type: 'login', userId: chatId, token: token, facebookId: result.id })
             console.log(result)
             return res.render('fb_logged', { name: result.first_name, pictureUrl: result.picture.data.url })
           })

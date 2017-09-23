@@ -2,38 +2,32 @@ const url = require('url')
 const WebSocket = require('ws')
 const sendHeartbeats = require('ws-heartbeats')
 
-const authorizationHeader = process.env.WEBSOCKET_TOKEN || 'pizza'
+let configurations = null
 
-// this is a flag that reflects the status of the connection with the brain
-let brainConnected = false
-let websocket = null
-
-const config = (httpServer, onMessage) => {
+// websocketNames is a object that maps each BRAIN_NAME to its AUTH_TOKEN
+const config = (httpServer, onMessage, websocketConfigs = {'/main': null}) => {
+  configurations = Object.keys(websocketConfigs).reduce((map, key) => {
+    // each configuration object has token, status and corresponding websocket
+    return map.set(key, {token: websocketConfigs[key], connected: false, websocket: null})
+  }, new Map())
   // configuration of the websocket for communication with the brain
   const wss = new WebSocket.Server({ server: httpServer })
   wss.on('connection', (ws, request) => {
-    console.log('request received')
     const urlParsed = url.parse(request.url, true)
-    // check the connection request inside resource
-    if (urlParsed.pathname !== '/brain') {
-      // path
-      ws.close(3001, 'please connect on the path /brain')
-      return
-    }
-    if (urlParsed.query['jwt'] !== authorizationHeader) {
-      // and authentication of brain
-      ws.close(3002, 'authentication of brain failed')
-      return
-    }
-    if (brainConnected) {
-      // the brain is already connected
-      ws.close(3003, 'a brain is already connected')
-      console.log('the brain is already connected. Rejected connection request ' + request)
+    console.log(`request received with path ${urlParsed.pathname}`)
+    // get the configuration
+    const conf = configurations.get(urlParsed.pathname)
+    if (!conf) {
+      // pathname did not match with registered ones
+      ws.close(3001, `unregistered path ${urlParsed.pathname}`)
+    } else if (urlParsed.query['token'] !== conf.token) {
+      ws.close(3002, `wrong authentication token for path ${urlParsed.pathname}`)
+    } else if (conf.connected) {
+      ws.close(3003, `a brain is already connected on path ${urlParsed.pathname}`)
     } else {
-      console.log(new Date() + ' - accepted brain connection from ' + request.headers['user-agent'])
-
-      brainConnected = true
-      websocket = ws
+      console.log(`${new Date()} - accepted brain connection on path ${urlParsed.pathname} from ${request.headers['user-agent']}`)
+      conf.connected = true
+      conf.websocket = ws
 
       // enable heartbeats to keep the connection alive
       sendHeartbeats(ws)
@@ -51,22 +45,25 @@ const config = (httpServer, onMessage) => {
       })
       ws.on('close', (message) => {
         // closed connection with the brain
-        brainConnected = false
-        websocket = null
+        conf.connected = false
+        conf.websocket = null
       })
     }
   })
 }
 
-const send = (message) => {
-  // check if brain connected
-  if (brainConnected) {
-    // deliver the message to the brain
-    websocket.send(JSON.stringify(message))
-    return true
-  } else {
-    console.log('disconnected brain, impossible to send')
+const send = (message, brainName = '/main') => {
+  const conf = configurations.get(brainName)
+  if (!conf) {
+    console.log(`unregistered brain with name ${brainName}`)
     return false
+  } else if (!conf.connected) {
+    console.log(`brain ${brainName} is not connected`)
+    return false
+  } else {
+    // deliver the message to the brain
+    conf.websocket.send(JSON.stringify(message))
+    return true
   }
 }
 

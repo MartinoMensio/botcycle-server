@@ -153,7 +153,7 @@ const onWebsocketMessage = (message) => {
     }
   }
 }
-websocket.config(server, onWebsocketMessage)
+websocket.config(server, onWebsocketMessage, {'/main': process.env.WEBSOCKET_TOKEN, '/slack': process.env.SLACK_WEBSOCKET_TOKEN})
 
 // configuration of botkit
 const controller = Botkit.botframeworkbot({ port: port })
@@ -182,8 +182,9 @@ controller.on('message_received', (bot, message) => {
     position: position && position.geo,
     attachments: message.attachments
   }
+  const brainName = message.user.startsWith('slack') ? '/slack' : '/main'
   // deliver the message to the brain
-  if (!websocket.send(websocketMsg)) {
+  if (!websocket.send(websocketMsg, brainName)) {
     // TODO store the message for future connection with brain?
     bot.reply(message, 'my brain is offline!')
   }

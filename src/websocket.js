@@ -66,8 +66,18 @@ const send = (message, brainName = '/main') => {
     return true
   }
 }
+const isConnected = (brainName = '/main') => {
+  const conf = configurations.get(brainName)
+  if (!conf) {
+    console.log(`unregistered brain with name ${brainName}`)
+    return false
+  } else {
+    return conf.connected
+  }
+}
 
 module.exports = {
   config,
-  send
+  send,
+  isConnected
 }

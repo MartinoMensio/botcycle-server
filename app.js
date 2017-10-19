@@ -182,7 +182,8 @@ controller.on('message_received', (bot, message) => {
     position: position && position.geo,
     attachments: message.attachments
   }
-  const brainName = message.user.startsWith('slack') ? '/slack' : '/main'
+  // if slack brain is offline, deliver to the main brain
+  const brainName = (message.user.startsWith('slack') && websocket.isConnected('/slack')) ? '/slack' : '/main'
   // deliver the message to the brain
   if (!websocket.send(websocketMsg, brainName)) {
     // TODO store the message for future connection with brain?

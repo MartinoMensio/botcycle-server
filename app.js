@@ -35,9 +35,6 @@ const onWebsocketMessage = (message, language) => {
     const context = contexts.get(message.userId)
     if (context) {
       // send via botkit
-      console.log('language: ' + language)
-      console.log('bots.bot:')
-      console.log(bots.bots)
       const bot = bots.bots[language]
       bot.startConversation(context, (err, convo) => {
         if (err) {

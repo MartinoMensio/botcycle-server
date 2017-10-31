@@ -19,7 +19,7 @@ const config = (httpServer, languages, onMessage, websocketConfigs = {'/main': n
   }
   configurations = Object.keys(localizedConfigs).reduce((map, key) => {
     // each configuration object has token, status and corresponding websocket
-    return map.set(key, {token: localizedConfigs[key].auth, connected: false, websocket: null, language: localizedConfigs[key].lang})
+    return map.set(key, {token: localizedConfigs[key].auth, connected: false, websocket: null, language: localizedConfigs[key].language})
   }, new Map())
   // configuration of the websocket for communication with the brain
   const wss = new WebSocket.Server({ server: httpServer })

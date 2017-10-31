@@ -5,10 +5,21 @@ const sendHeartbeats = require('ws-heartbeats')
 let configurations = null
 
 // websocketNames is a object that maps each BRAIN_NAME to its AUTH_TOKEN
-const config = (httpServer, onMessage, websocketConfigs = {'/main': null}) => {
-  configurations = Object.keys(websocketConfigs).reduce((map, key) => {
+const config = (httpServer, languages, onMessage, websocketConfigs = {'/main': null}) => {
+  // multiply each websocket configuration with the languages
+  const localizedConfigs = {}
+  for (var key in websocketConfigs) {
+    var element = websocketConfigs[key]
+    languages.forEach(lang => {
+      localizedConfigs[`/${lang}${key}`] = {
+        auth: element,
+        language: lang
+      }
+    })
+  }
+  configurations = Object.keys(localizedConfigs).reduce((map, key) => {
     // each configuration object has token, status and corresponding websocket
-    return map.set(key, {token: websocketConfigs[key], connected: false, websocket: null})
+    return map.set(key, {token: localizedConfigs[key].auth, connected: false, websocket: null, language: localizedConfigs[key].lang})
   }, new Map())
   // configuration of the websocket for communication with the brain
   const wss = new WebSocket.Server({ server: httpServer })
@@ -38,7 +49,7 @@ const config = (httpServer, onMessage, websocketConfigs = {'/main': null}) => {
         try {
           const message = JSON.parse(messageStr)
           // call the callback
-          onMessage(message)
+          onMessage(message, conf.language)
         } catch (error) {
           console.log(error)
         }
@@ -52,13 +63,14 @@ const config = (httpServer, onMessage, websocketConfigs = {'/main': null}) => {
   })
 }
 
-const send = (message, brainName = '/main') => {
-  const conf = configurations.get(brainName)
+const send = (message, brainName = '/main', language = 'en') => {
+  const localizedBrainName = '/' + language + brainName
+  const conf = configurations.get(localizedBrainName)
   if (!conf) {
-    console.log(`unregistered brain with name ${brainName}`)
+    console.log(`unregistered brain with name ${localizedBrainName}`)
     return false
   } else if (!conf.connected) {
-    console.log(`brain ${brainName} is not connected`)
+    console.log(`brain ${localizedBrainName} is not connected`)
     return false
   } else {
     // deliver the message to the brain
@@ -66,10 +78,11 @@ const send = (message, brainName = '/main') => {
     return true
   }
 }
-const isConnected = (brainName = '/main') => {
-  const conf = configurations.get(brainName)
+const isConnected = (brainName = '/main', language = 'en') => {
+  const localizedBrainName = '/' + language + brainName
+  const conf = configurations.get(localizedBrainName)
   if (!conf) {
-    console.log(`unregistered brain with name ${brainName}`)
+    console.log(`unregistered brain with name ${localizedBrainName}`)
     return false
   } else {
     return conf.connected

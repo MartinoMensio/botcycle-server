@@ -9,6 +9,7 @@ const Botkit = require('botkit')
 const webManager = require('./src/web-manager')
 const websocket = require(('./src/websocket'))
 const encryption = require('./src/encryption')
+const botManager = require('./src/bot-manager')
 
 const port = process.env.PORT || 8888
 
@@ -23,14 +24,18 @@ webManager.config(app)
 // the http server
 const server = http.createServer(app)
 
+// this uses some env variables
+const bots = botManager.createBots(app)
+
 const contexts = new Map()
 
-const onWebsocketMessage = (message) => {
+const onWebsocketMessage = (message, language) => {
   if (message.userId) {
     // this is a message to deliver
     const context = contexts.get(message.userId)
     if (context) {
       // send via botkit
+      const bot = bots.bots[language]
       bot.startConversation(context, (err, convo) => {
         if (err) {
           throw err
@@ -153,30 +158,19 @@ const onWebsocketMessage = (message) => {
     }
   }
 }
-websocket.config(server, onWebsocketMessage, {'/main': process.env.WEBSOCKET_TOKEN, '/slack': process.env.SLACK_WEBSOCKET_TOKEN})
-
-// configuration of botkit
-const controller = Botkit.botframeworkbot({ port: port })
-
-const bot = controller.spawn({
-  appId: process.env.app_id,
-  appPassword: process.env.app_password
-})
-
-// configuration of the the webser endpoints
-controller.createWebhookEndpoints(app, bot, function () {
-  console.log('This bot is online!!!')
-})
+websocket.config(server, bots.languages, onWebsocketMessage, {'/main': process.env.WEBSOCKET_TOKEN, '/slack': process.env.SLACK_WEBSOCKET_TOKEN})
 
 // message received from botframework
-controller.on('message_received', (bot, message) => {
+bots.controller.on('message_received', (bot, message) => {
   console.log(message)
+  console.log(bot.language)
 
   // set the context to be able to send back to the user
   contexts.set(message.user, message)
   // preprocess message
   const position = message.entities && message.entities.find((el) => { if (el.geo) return true })
   const websocketMsg = {
+    language: bot.language,
     userId: message.user,
     text: message.text,
     position: position && position.geo,
@@ -185,7 +179,7 @@ controller.on('message_received', (bot, message) => {
   // if slack brain is offline, deliver to the main brain
   const brainName = (message.user.startsWith('slack') && websocket.isConnected('/slack')) ? '/slack' : '/main'
   // deliver the message to the brain
-  if (!websocket.send(websocketMsg, brainName)) {
+  if (!websocket.send(websocketMsg, brainName, bot.language)) {
     // TODO store the message for future connection with brain?
     bot.reply(message, 'my brain is offline!')
   }

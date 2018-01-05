@@ -126,13 +126,13 @@ const onWebsocketMessage = (message, language) => {
                   throw err
                 }
                 convo.say({
-                  text: message.text,
+                  // text: message.text,
                   attachments: [
                     {
                       contentType: 'application/vnd.microsoft.card.hero',
                       content: {
                         // title: 'Results',
-                        text: '',
+                        text: message.text,
                         images: [{
                           'url': url,
                           alt: 'location'

@@ -10,6 +10,7 @@ const webManager = require('./src/web-manager')
 const websocket = require(('./src/websocket'))
 const encryption = require('./src/encryption')
 const botManager = require('./src/bot-manager')
+const mapManager = require('./src/map-manager')
 
 const port = process.env.PORT || 8888
 
@@ -83,8 +84,6 @@ const onWebsocketMessage = (message, language) => {
             break
           // map for the location
           case 'map':
-
-            const loc = message.markers[0].latitude + ',' + message.markers[0].longitude
             const buttons = (message.buttons || []).map(el => {
               switch (el.type) {
                 // a button that on click sends a message with the value
@@ -103,31 +102,47 @@ const onWebsocketMessage = (message, language) => {
                   }
               }
             })
-            buttons.unshift({
-              type: 'openUrl',
-              title: 'open in map',
-              value: 'https://www.google.com/maps/place/' + loc
-            })
-            convo.say({
-              // text: message.text,
-              attachments: [
-                {
-                  contentType: 'application/vnd.microsoft.card.hero',
-                  content: {
-                    // title: 'Results',
-                    text: message.text,
-                    images: [{
-                      url: 'https://maps.googleapis.com/maps/api/staticmap?center=' + loc + '&zoom=13&size=400x400&markers=' + loc + '&key=' + process.env.MAPS_TOKEN,
-                      alt: 'location',
-                      tap: {
-                        type: 'openUrl',
-                        value: 'https://www.google.com/maps/place/' + loc
-                      }
-                    }],
-                    buttons: buttons
-                  }
+            convo.say(message.text)
+            // points is an array of objects like {'type': 'from'/'to'/'bike'/'slot', 'value': [lat,lng]}
+            const points = Object.assign(...message.markers.map(d => ({ [d['type']]: d['value'] })))
+            if (points.slot) {
+              buttons.unshift({
+                type: 'openUrl',
+                title: points.slot.name,
+                value: `https://www.google.com/maps/place/${points.slot.lat},${points.slot.lng}`
+              })
+            }
+            if (points.bike) {
+              buttons.unshift({
+                type: 'openUrl',
+                title: points.bike.name,
+                value: `https://www.google.com/maps/place/${points.bike.lat},${points.bike.lng}`
+              })
+            }
+            mapManager.pointsToMapUrl(points).then(url => {
+              console.log('received URL for map')
+              bot.startConversation(context, (err, convo) => {
+                if (err) {
+                  throw err
                 }
-              ]
+                convo.say({
+                  // text: message.text,
+                  attachments: [
+                    {
+                      contentType: 'application/vnd.microsoft.card.hero',
+                      content: {
+                        // title: 'Results',
+                        text: '',
+                        images: [{
+                          'url': url,
+                          alt: 'location'
+                        }],
+                        buttons: buttons
+                      }
+                    }
+                  ]
+                })
+              })
             })
             break
           // display a button to the user asking facebook login
@@ -158,7 +173,7 @@ const onWebsocketMessage = (message, language) => {
     }
   }
 }
-websocket.config(server, bots.languages, onWebsocketMessage, {'/main': process.env.WEBSOCKET_TOKEN, '/slack': process.env.SLACK_WEBSOCKET_TOKEN})
+websocket.config(server, bots.languages, onWebsocketMessage, { '/main': process.env.WEBSOCKET_TOKEN, '/slack': process.env.SLACK_WEBSOCKET_TOKEN })
 
 // message received from botframework
 bots.controller.on('message_received', (bot, message) => {

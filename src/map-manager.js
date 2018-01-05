@@ -4,12 +4,10 @@ const mapboxToken = process.env.MAPBOX_TOKEN
 const directionEndpoint = 'https://api.mapbox.com/directions/v5/mapbox/'
 const staticMapEndpoint = 'https://api.mapbox.com/styles/v1/mapbox/streets-v10/static/'
 
-const pointsToGeoJson = (pointsArray) => {
+const pointsToGeoJson = (points) => {
   // returns a promise
   let features = []
-  // points is an array of objects like {'type': 'from'/'to'/'bike'/'slot', 'value': [lat,lng]}
-  const points = Object.assign(...pointsArray.map(d => ({ [d['type']]: d['value'] })))
-  if (pointsArray.length === 1 && points.from) {
+  if (Object.keys(points).length === 1 && points.from) {
     // this is the position set by the user
     const marker = getMarker(points.from)
     features = [marker]
@@ -36,13 +34,13 @@ const pointsToGeoJson = (pointsArray) => {
     const p = getPath(points.from, points.slot, 'cycling')
     features = [fromMarker, slotMarker, p]
   } else {
-    console.log('unexpected array of points')
-    console.log(pointsArray)
-    return
+    console.log('unexpected points')
+    console.log(points)
+    return Promise.reject('unexpected points')
   }
   // features can be a mix of values and promises, resolve them
   return Promise.all(features).then(featuresResolved => {
-    console.log(featuresResolved)
+    //console.log(featuresResolved)
     return { type: 'FeatureCollection', features: featuresResolved }
   })
 }
@@ -50,11 +48,11 @@ const pointsToGeoJson = (pointsArray) => {
 const getPath = (s, d, mode) => {
   // TODO styling
   // TODO catch unauthorized return straight line
-  const uri = directionEndpoint + `${mode}/${s.longitude},${s.latitude};${d.longitude},${d.latitude}`
+  const uri = directionEndpoint + `${mode}/${s.lng},${s.lat};${d.lng},${d.lat}`
 
   return request.get({ uri: uri, qs: { access_token: mapboxToken, geometries: 'geojson' }, json: true }).then(result => {
     // TODO extract the body and encapsulate in a feature
-    console.log(JSON.stringify(result))
+    //console.log(JSON.stringify(result))
     const color = (mode === 'cycling') ? '#b22600' : '#008743'
     return {
       type: 'Feature',
@@ -70,7 +68,7 @@ const getPath = (s, d, mode) => {
 const getMarker = (position, type = 'marker') => {
   return {
     type: 'Feature',
-    geometry: { 'type': 'Point', coordinates: [position.longitude, position.latitude] },
+    geometry: { 'type': 'Point', coordinates: [position.lng, position.lat] },
     properties: { 'marker-symbol': type, 'marker-color': '#116cff' }
   }
 }
@@ -80,13 +78,13 @@ const pointsToMapUrl = (points) => {
     let result = null
     if (points.length === 1) {
       // fix the zoom
-      const loczoom = `${points[0].value.longitude},${points[0].value.latitude},13`
+      const loczoom = `${points[0].value.lng},${points[0].value.lat},13`
       result = staticMapEndpoint + `geojson(${escape(JSON.stringify(geoJson))})/${loczoom}/800x600@2x?access_token=${mapboxToken}`
     } else {
       // use auto zoom
       result = staticMapEndpoint + `geojson(${escape(JSON.stringify(geoJson))})/auto/800x600@2x?access_token=${mapboxToken}`
     }
-    console.log(result)
+    //console.log(result)
     return result
   })
 }

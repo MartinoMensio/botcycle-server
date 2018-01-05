@@ -46,14 +46,10 @@ const pointsToGeoJson = (points) => {
 }
 
 const getPath = (s, d, mode) => {
-  // TODO styling
-  // TODO catch unauthorized return straight line
+  const color = (mode === 'cycling') ? '#b22600' : '#008743'
   const uri = directionEndpoint + `${mode}/${s.lng},${s.lat};${d.lng},${d.lat}`
 
   return request.get({ uri: uri, qs: { access_token: mapboxToken, geometries: 'geojson' }, json: true }).then(result => {
-    // TODO extract the body and encapsulate in a feature
-    //console.log(JSON.stringify(result))
-    const color = (mode === 'cycling') ? '#b22600' : '#008743'
     return {
       type: 'Feature',
       geometry: {
@@ -61,6 +57,16 @@ const getPath = (s, d, mode) => {
         coordinates: result.routes[0].geometry.coordinates
       },
       properties: {'stroke': color, 'stroke-width': 5}
+    }
+  }).catch(result => {
+    // in case of error do a straight line
+    return {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: [[s.lng, s.lat], [d.lng, d.lat]]
+      },
+      properties: {'stroke': color, 'stroke-width': 5, 'stroke-opacity': 0.1}
     }
   })
 }
@@ -76,15 +82,14 @@ const getMarker = (position, type = 'marker') => {
 const pointsToMapUrl = (points) => {
   return pointsToGeoJson(points).then(geoJson => {
     let result = null
-    if (points.length === 1) {
+    if (Object.keys(points).length === 1) {
       // fix the zoom
-      const loczoom = `${points[0].value.lng},${points[0].value.lat},13`
+      const loczoom = `${points['from'].lng},${points['from'].lat},13`
       result = staticMapEndpoint + `geojson(${escape(JSON.stringify(geoJson))})/${loczoom}/800x600@2x?access_token=${mapboxToken}`
     } else {
       // use auto zoom
       result = staticMapEndpoint + `geojson(${escape(JSON.stringify(geoJson))})/auto/800x600@2x?access_token=${mapboxToken}`
     }
-    //console.log(result)
     return result
   })
 }

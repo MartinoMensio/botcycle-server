@@ -167,7 +167,8 @@ const onWebsocketMessage = (message, language) => {
                   buttons: [{
                     type: 'openUrl',
                     title: 'login with facebook',
-                    value: 'https://www.facebook.com/v2.10/dialog/oauth?client_id=1253230874729964&redirect_uri=https%3A//botcycle-botkit.herokuapp.com/fb_logged%3Fid%3D' + encryption.encrypt(message.userId) + '&scope=user_likes,user_location,user_tagged_places'
+                    // TODO change client id based on language
+                    value: 'https://www.facebook.com/v2.10/dialog/oauth?client_id=1253230874729964&redirect_uri=https%3A//botcycle-server.herokuapp.com/fb_logged%3Fid%3D' + encryption.encrypt(message.userId) + '&scope=user_likes,user_location,user_tagged_places'
                   }]
                 }
               }]

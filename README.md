@@ -1,6 +1,6 @@
-# Botcycle-botkit
+# BotCycle Server
 
-This is the component of **botcycle** that interacts with the messaging platforms. It is responsible to communicate with [the brain of botcycle](https://github.com/MultimediaSemantics/botcycle) over a websocket and providing some platform-specific data on the messaging channels.
+This is the component of **botcycle** that interacts with the messaging platforms. It is responsible to communicate with [the brain of botcycle](https://github.com/D2KLab/botcycle) over a websocket and providing some platform-specific data on the messaging channels.
 
 ## Installing
 
@@ -22,7 +22,7 @@ Running the app requires some environment variables:
 
 All the messages are json (serialized)
 
-#### From the brain to botkit:
+#### From the brain to bot server:
 
 `message={userId, type, text, ...}`
 
